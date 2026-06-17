@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Трекер · Наставник</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap');
+:root{
+  --bg:#0b0b0d;--s1:#131316;--s2:#1a1a1f;--s3:#222228;
+  --border:#2c2c34;--border2:#38383f;
+  --gold:#c9a84c;--gold2:#8a6f2e;--gold3:rgba(201,168,76,0.08);
+  --text:#e6e2d8;--mid:#9994a0;--dim:#525059;
+  --red:#c25a5a;--green:#5a9c6e;--blue:#5a7a9c;
+  --p1:#c9a84c;--p2:#a87b8f;--p3:#7b9ea8;--p4:#7ba87e;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-weight:300;min-height:100vh;padding-bottom:80px;}
+.nav{position:sticky;top:0;z-index:50;display:flex;background:rgba(11,11,13,0.95);border-bottom:1px solid var(--border);backdrop-filter:blur(8px);overflow-x:auto;scrollbar-width:none;}
+.nav::-webkit-scrollbar{display:none;}
+.nav-tab{flex-shrink:0;padding:14px 15px;font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--dim);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap;}
+.nav-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.page{display:none;}
+.page.active{display:block;}
+.page-header{padding:26px 20px 18px;border-bottom:1px solid var(--border);}
+.eyebrow{font-size:9px;font-weight:500;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold2);margin-bottom:8px;}
+.page-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;line-height:1.1;color:var(--text);}
+.page-title em{font-style:italic;color:var(--gold);}
+.sec{padding:18px 20px 0;}
+.sec-label{font-size:9px;font-weight:500;letter-spacing:0.16em;text-transform:uppercase;color:var(--dim);margin-bottom:12px;}
+
+/* WEEK SWITCHER */
+.week-switch{display:flex;gap:6px;padding:14px 20px 0;}
+.week-btn{flex:1;padding:8px;border-radius:8px;font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;border:1px solid var(--border);background:transparent;color:var(--dim);cursor:pointer;transition:all 0.15s;}
+.week-btn.active{background:var(--gold3);border-color:var(--gold2);color:var(--gold);}
+
+/* HEATMAP */
+.heat-row{display:flex;gap:5px;}
+.heat-cell{flex:1;aspect-ratio:1;border-radius:5px;background:var(--s2);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer;}
+.heat-day{font-size:8px;color:var(--dim);}
+.heat-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);opacity:0;}
+.heat-num{font-size:8px;color:var(--dim);}
+.heat-cell.f1{background:rgba(201,168,76,0.08);}
+.heat-cell.f2{background:rgba(201,168,76,0.18);}
+.heat-cell.f3{background:rgba(201,168,76,0.35);}
+.heat-cell.f1 .heat-dot,.heat-cell.f2 .heat-dot,.heat-cell.f3 .heat-dot{opacity:1;}
+.heat-cell.f3 .heat-num{color:var(--gold);}
+.heat-cell.today{border-color:var(--gold);border-width:1.5px;}
+.heat-cell.selected{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold);}
+
+/* SLEEP */
+.sleep-block{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:14px;}
+.sleep-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.sleep-label{font-size:12px;color:var(--mid);flex:1;}
+.sleep-toggle{display:flex;gap:6px;}
+.s-btn{padding:4px 12px;border-radius:20px;font-size:10px;font-weight:500;border:1px solid var(--border);background:transparent;color:var(--dim);cursor:pointer;transition:all 0.15s;}
+.s-btn.yes.active{background:rgba(90,156,110,0.15);border-color:var(--green);color:var(--green);}
+.s-btn.no.active{background:rgba(194,90,90,0.12);border-color:var(--red);color:var(--red);}
+.sleep-reason{width:100%;background:var(--s3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:12px;font-weight:300;padding:8px 10px;resize:none;outline:none;line-height:1.5;}
+.sleep-reason::placeholder{color:var(--dim);}
+.sleep-reason:focus{border-color:var(--gold2);}
+.sleep-note{font-size:10px;color:var(--red);margin-top:6px;font-style:italic;}
+
+/* AFFIRMATION SLOTS */
+.aff-slot{background:var(--s2);border-left:2px solid var(--gold2);border-radius:0 8px 8px 0;padding:12px 14px;margin-bottom:8px;}
+.aff-slot-time{font-size:8px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold2);margin-bottom:6px;}
+.aff-orig{font-family:'Cormorant Garamond',serif;font-size:17px;font-style:italic;color:var(--gold);line-height:1.35;margin-bottom:4px;}
+.aff-trans{font-size:11px;color:var(--mid);line-height:1.5;}
+.aff-src{font-size:9px;color:var(--dim);margin-top:4px;letter-spacing:0.06em;}
+.aff-rate-row{display:flex;gap:5px;margin-top:9px;align-items:center;}
+.aff-rate-label{font-size:9px;color:var(--dim);margin-right:2px;}
+.rate-star{font-size:15px;color:var(--border2);cursor:pointer;transition:color 0.15s;line-height:1;}
+.rate-star.lit{color:var(--gold);}
+
+/* CHECK ITEM */
+.check-item{display:flex;align-items:flex-start;gap:12px;padding:10px 12px;background:var(--s2);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:border-color 0.15s;}
+.check-item.done{background:var(--gold3);border-color:var(--gold2);}
+.check-circle{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all 0.2s;}
+.check-item.done .check-circle{background:var(--gold);border-color:var(--gold);}
+.check-x{display:none;font-size:10px;font-weight:700;color:var(--bg);}
+.check-item.done .check-x{display:block;}
+.check-body{flex:1;min-width:0;}
+.check-tag{font-size:8px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);margin-bottom:2px;}
+.check-title{font-size:13px;font-weight:400;color:var(--text);line-height:1.3;transition:color 0.15s;}
+.check-item.done .check-title{color:var(--gold);}
+.check-note{font-size:10px;color:var(--dim);line-height:1.5;margin-top:3px;font-style:italic;}
+.star-badge{font-size:9px;color:var(--gold);flex-shrink:0;margin-top:2px;}
+.check-time{font-size:9px;color:var(--dim);flex-shrink:0;margin-top:3px;white-space:nowrap;}
+.voice-aff{font-family:'Cormorant Garamond',serif;font-size:14px;font-style:italic;color:var(--gold);line-height:1.45;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
+.infl-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:16px;}
+.infl-topic{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--text);line-height:1.2;}
+.infl-author{font-size:11px;color:var(--gold2);margin-top:2px;margin-bottom:12px;letter-spacing:0.04em;}
+.infl-sub{font-size:9px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);margin:14px 0 6px;}
+.infl-text{font-size:13px;color:var(--mid);line-height:1.6;}
+.infl-text.q{color:var(--text);font-style:italic;font-family:'Cormorant Garamond',serif;font-size:15px;line-height:1.5;}
+.infl-src{font-size:10px;color:var(--dim);line-height:1.5;}
+.infl-done{display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px 12px;background:var(--s2);border:1px solid var(--border);border-radius:8px;cursor:pointer;}
+.infl-done.done{background:var(--gold3);border-color:var(--gold2);}
+.infl-done .check-circle{width:18px;height:18px;}
+.infl-done.done .check-title{color:var(--gold);}
+.influence-week{display:flex;gap:6px;padding:0 20px 6px;overflow-x:auto;scrollbar-width:none;}
+.influence-week::-webkit-scrollbar{display:none;}
+.iw-btn{flex-shrink:0;padding:8px 12px;border-radius:8px;font-size:11px;font-weight:500;border:1px solid var(--border);background:transparent;color:var(--dim);cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+.iw-btn.active{background:var(--gold3);border-color:var(--gold2);color:var(--gold);}
+.infl-theory-p{font-size:13px;color:var(--mid);line-height:1.65;margin-bottom:10px;}
+.infl-src-item{font-size:11px;color:var(--dim);line-height:1.5;margin-bottom:6px;padding-left:14px;position:relative;}
+.infl-src-item:before{content:'—';position:absolute;left:0;color:var(--gold2);}
+.infl-teaser{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:border-color 0.15s;}
+.infl-teaser:hover{border-color:var(--gold2);}
+.infl-teaser-topic{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--text);line-height:1.2;}
+.infl-teaser-author{font-size:10px;color:var(--gold2);margin-top:2px;margin-bottom:8px;}
+.infl-teaser-preview{font-size:12px;color:var(--mid);line-height:1.55;}
+.infl-teaser-cta{font-size:11px;font-weight:500;color:var(--gold);margin-top:12px;letter-spacing:0.04em;}
+
+/* RATING ROWS — day score */
+.rating-block{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;}
+.rating-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.rating-row:last-child{margin-bottom:0;}
+.rating-label{font-size:12px;color:var(--mid);flex:1;}
+.rating-dots{display:flex;gap:6px;}
+.r-dot{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--dim);cursor:pointer;transition:all 0.15s;font-weight:500;}
+.r-dot.active{background:var(--gold);border-color:var(--gold);color:var(--bg);}
+.rating-label.p1{color:var(--p1);}.rating-label.p2{color:var(--p2);}.rating-label.p3{color:var(--p3);}.rating-label.p4{color:var(--p4);}
+
+/* STATE / FLOW */
+.flow-block{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;}
+.flow-q{font-size:12px;color:var(--mid);margin-bottom:10px;line-height:1.4;}
+.flow-scale{display:flex;gap:5px;}
+.flow-dot{flex:1;aspect-ratio:1;max-width:40px;border-radius:8px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--dim);cursor:pointer;transition:all 0.15s;}
+.flow-dot.active{background:rgba(90,122,156,0.2);border-color:var(--blue);color:var(--blue);}
+
+/* REPS */
+.reps-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.rep-field{display:flex;flex-direction:column;gap:4px;}
+.rep-label{font-size:9px;color:var(--dim);letter-spacing:0.08em;}
+.rep-input{background:var(--s3);border:1px solid var(--border);border-radius:6px;color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;padding:8px 10px;outline:none;width:100%;text-align:center;}
+.rep-input:focus{border-color:var(--gold2);}
+.rep-input::placeholder{color:var(--dim);font-size:14px;}
+
+/* BACK FLAG */
+.back-flag{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.back-label{font-size:12px;color:var(--mid);flex:1;line-height:1.4;}
+
+.perf-input{width:100%;background:var(--s3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Inter',sans-serif;font-size:12px;font-weight:300;padding:10px 12px;resize:none;outline:none;line-height:1.5;}
+.perf-input::placeholder{color:var(--dim);}
+.perf-input:focus{border-color:var(--gold2);}
+.ritual-box{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;}
+.ritual-title{font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:var(--mid);line-height:1.4;}
+
+/* SUMMARY */
+.summary-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:10px;}
+.summary-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400;color:var(--text);margin-bottom:14px;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.stat-cell{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;}
+.stat-val{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:300;color:var(--gold);display:block;}
+.stat-label{font-size:9px;color:var(--dim);letter-spacing:0.08em;text-transform:uppercase;}
+.compare-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);}
+.compare-row:last-child{border-bottom:none;}
+.compare-label{font-size:12px;color:var(--mid);flex:1;}
+.compare-val{font-family:'Cormorant Garamond',serif;font-size:16px;}
+.compare-val.up{color:var(--green);}.compare-val.down{color:var(--red);}.compare-val.same{color:var(--dim);}
+
+/* RECORDS */
+.record-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:10px;}
+.record-title{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:400;color:var(--text);margin-bottom:14px;}
+.record-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+.record-row:last-child{border-bottom:none;}
+.record-label{font-size:12px;color:var(--mid);}
+.record-best{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold);}
+.record-target{font-size:10px;color:var(--dim);}
+.record-bar-wrap{width:100%;height:2px;background:var(--s3);border-radius:1px;margin-top:4px;}
+.record-bar{height:100%;background:linear-gradient(90deg,var(--gold2),var(--gold));border-radius:1px;}
+
+/* AFFIRMATIONS PAGE */
+.aff-filter{display:flex;gap:6px;padding:0 20px 14px;overflow-x:auto;scrollbar-width:none;}
+.aff-filter::-webkit-scrollbar{display:none;}
+.filter-btn{flex-shrink:0;padding:6px 12px;border-radius:20px;font-size:10px;font-weight:500;border:1px solid var(--border);background:transparent;color:var(--dim);cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+.filter-btn.active{background:var(--gold3);border-color:var(--gold2);color:var(--gold);}
+.aff-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:8px;}
+.aff-card-orig{font-family:'Cormorant Garamond',serif;font-size:19px;font-style:italic;color:var(--gold);line-height:1.35;margin-bottom:6px;}
+.aff-card-trans{font-size:12px;color:var(--mid);line-height:1.5;margin-bottom:4px;}
+.aff-card-src{font-size:9px;color:var(--dim);letter-spacing:0.06em;}
+.aff-lang-tag{display:inline-block;font-size:8px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--gold2);border:1px solid var(--gold2);border-radius:4px;padding:1px 6px;margin-top:8px;}
+.aff-card-rate{display:flex;gap:6px;margin-top:12px;align-items:center;}
+.aff-card-note{font-size:10px;color:var(--dim);margin-top:8px;font-style:italic;padding-top:8px;border-top:1px solid var(--border);}
+
+/* SCORES PAGE */
+.score-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:10px;}
+.score-title{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:400;color:var(--text);margin-bottom:4px;}
+.score-sub{font-size:11px;color:var(--dim);margin-bottom:14px;}
+.bar-chart{display:flex;align-items:flex-end;gap:4px;height:90px;margin-top:8px;}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;}
+.bar-fill{width:100%;background:linear-gradient(180deg,var(--gold),var(--gold2));border-radius:3px 3px 0 0;min-height:2px;transition:height 0.4s;}
+.bar-lbl{font-size:8px;color:var(--dim);}
+.pillar-score-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.pillar-score-row:last-child{border-bottom:none;}
+.pillar-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.pillar-name-lbl{font-size:12px;color:var(--mid);flex:1;}
+.pillar-avg{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold);}
+.pillar-track{width:60px;height:3px;background:var(--s3);border-radius:2px;overflow:hidden;}
+.pillar-track-fill{height:100%;border-radius:2px;}
+
+/* BUTTONS */
+.btn{width:100%;background:transparent;border:1px solid var(--gold2);color:var(--gold);font-family:'Inter',sans-serif;font-size:11px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;padding:13px;border-radius:10px;cursor:pointer;transition:background 0.2s;margin-top:16px;}
+.btn:hover{background:var(--gold3);}
+.btn:active{background:rgba(201,168,76,0.15);}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--s2);border:1px solid var(--gold2);color:var(--gold);font-size:11px;font-weight:500;letter-spacing:0.06em;padding:8px 18px;border-radius:20px;opacity:0;transition:opacity 0.3s,transform 0.3s;pointer-events:none;z-index:200;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-tab active" onclick="goPage('day')">День</div>
+  <div class="nav-tab" onclick="goPage('cycle')">Неделя · Месяц</div>
+  <div class="nav-tab" onclick="goPage('influence')">Влияние</div>
+  <div class="nav-tab" onclick="goPage('scores')">Оценки</div>
+  <div class="nav-tab" onclick="goPage('records')">Рекорды</div>
+  <div class="nav-tab" onclick="goPage('affirmations')">Аффирмации</div>
+</nav>
+
+<!-- ===== DAY ===== -->
+<div id="page-day" class="page active">
+  <div class="page-header">
+    <div class="eyebrow">Трекер · Наставник</div>
+    <h1 class="page-title" id="dayTitle">—</h1>
+    <div style="font-size:12px;color:var(--mid);margin-top:6px" id="dayDate">—</div>
+  </div>
+
+  <div class="sec"><div class="heat-row" id="weekHeat"></div></div>
+
+  <div class="sec">
+    <div class="sec-label">Сон</div>
+    <div class="sleep-block">
+      <div class="sleep-row">
+        <div class="sleep-label">Лёг до 23:00?</div>
+        <div class="sleep-toggle">
+          <button class="s-btn yes" id="sleepYes" onclick="setSleep(true)">Да</button>
+          <button class="s-btn no" id="sleepNo" onclick="setSleep(false)">Нет</button>
+        </div>
+      </div>
+      <div id="sleepReasonWrap" style="display:none">
+        <textarea class="sleep-reason" id="sleepReason" rows="2" placeholder="Причина позднего отбоя…" oninput="saveDay()"></textarea>
+        <div class="sleep-note">Причина — не оправдание. Дисциплина важнее.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-label">Аффирмации дня</div>
+    <div id="dayAffirmations"></div>
+  </div>
+
+  <div class="sec" id="morningSec">
+    <div class="sec-label">Утренняя программа</div>
+    <div id="morningChecks"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-label">★ Упражнения воли «Я МОГУ»</div>
+    <div id="willChecks"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-label">⚡ Тело и драйв · 3 упражнения</div>
+    <div id="pillar_body"></div>
+  </div>
+  <div class="sec">
+    <div class="sec-label">👁 Красота и присутствие · 3 упражнения</div>
+    <div id="pillar_beauty"></div>
+    <div class="voice-aff" id="voiceAff"></div>
+  </div>
+  <div class="sec">
+    <div class="sec-label">🧠 Навыки / самопредпринимательство · 3 упражнения</div>
+    <div id="pillar_skill"></div>
+  </div>
+  <div class="sec">
+    <div class="sec-label">📚 Влияние — тема дня</div>
+    <div id="influenceTeaser"></div>
+  </div>
+  <div class="sec">
+    <div class="sec-label">🎯 Агентность и воля · 3 упражнения</div>
+    <div id="pillar_will"></div>
+  </div>
+
+  <div class="sec" id="eveningSec">
+    <div class="sec-label">Вечерняя программа</div>
+    <div id="eveningChecks"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-label">Показатели сегодня</div>
+    <div class="reps-grid">
+      <div class="rep-field"><div class="rep-label">ОТЖИМАНИЯ</div><input class="rep-input" type="number" id="rep_pushup" placeholder="0" oninput="saveDay()"></div>
+      <div class="rep-field"><div class="rep-label">ПОДТЯГИВАНИЯ</div><input class="rep-input" type="number" id="rep_pullup" placeholder="0" oninput="saveDay()"></div>
+      <div class="rep-field"><div class="rep-label">ПРЕСС</div><input class="rep-input" type="number" id="rep_abs" placeholder="0" oninput="saveDay()"></div>
+      <div class="rep-field"><div class="rep-label">ПЛАНКА (сек)</div><input class="rep-input" type="number" id="rep_plank" placeholder="0" oninput="saveDay()"></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-label">Поясница L2–L3</div>
+    <div class="back-flag">
+      <div class="back-label">Зажался корешок сегодня?</div>
+      <div class="sleep-toggle">
+        <button class="s-btn no" id="backYes" onclick="setBack(true)">Да</button>
+        <button class="s-btn yes" id="backNo" onclick="setBack(false)">Нет</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-label">Состояние потока / уверенности</div>
+    <div class="flow-block">
+      <div class="flow-q">Сегодня в общении: насколько было состояние «потока» — лёгкость, без комплексов, видел призму людей?</div>
+      <div class="flow-scale" id="flowScale"></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-label">Оценка дня</div>
+    <div class="rating-block">
+      <div class="rating-row">
+        <div class="rating-label" style="font-weight:500;color:var(--text)">Общая оценка дня</div>
+        <div class="rating-dots" id="rate_overall"></div>
+      </div>
+    </div>
+    <div class="rating-block">
+      <div class="rating-row"><div class="rating-label p1">⚡ Тело и драйв</div><div class="rating-dots" id="rate_body"></div></div>
+      <div class="rating-row"><div class="rating-label p2">👁 Красота / присутствие</div><div class="rating-dots" id="rate_beauty"></div></div>
+      <div class="rating-row"><div class="rating-label p3">🧠 Навыки / самопредпр.</div><div class="rating-dots" id="rate_skill"></div></div>
+      <div class="rating-row"><div class="rating-label p4">🎯 Агентность / воля</div><div class="rating-dots" id="rate_will"></div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-label">Вечерняя отметка</div>
+    <div class="ritual-box"><div class="ritual-title" id="dailyQ">—</div></div>
+    <textarea class="perf-input" id="reflectionText" rows="3" placeholder="Три слова или три строки…" oninput="saveDay()"></textarea>
+  </div>
+
+  <div class="sec"><button class="btn" onclick="saveDayFinal()">Сохранить день ✓</button></div>
+</div>
+
+<!-- ===== CYCLE (week + month) ===== -->
+<div id="page-cycle" class="page">
+  <div class="page-header">
+    <div class="eyebrow">Контрольная точка</div>
+    <h1 class="page-title">Текущая <em>неделя</em></h1>
+  </div>
+  <div class="sec">
+    <div class="summary-card">
+      <div class="summary-title">Эта неделя</div>
+      <div class="stat-grid">
+        <div class="stat-cell"><span class="stat-val" id="w1Days">0</span><span class="stat-label">Дней выполнено</span></div>
+        <div class="stat-cell"><span class="stat-val" id="w1Sleep">0</span><span class="stat-label">Сон до 23:00</span></div>
+        <div class="stat-cell"><span class="stat-val" id="w1Flow">—</span><span class="stat-label">Поток средн.</span></div>
+        <div class="stat-cell"><span class="stat-val" id="w1Score">—</span><span class="stat-label">Оценка средн.</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sec-label">Неделя против прошлой</div>
+    <div class="summary-card"><div id="cycleCompare"></div></div>
+  </div>
+
+  <div class="page-header" style="border-top:1px solid var(--border);margin-top:8px">
+    <div class="eyebrow">Прогресс</div>
+    <h1 class="page-title">За <em>месяц</em></h1>
+  </div>
+  <div class="sec">
+    <div class="summary-card">
+      <div class="summary-title">Последние 30 дней</div>
+      <div class="stat-grid">
+        <div class="stat-cell"><span class="stat-val" id="mDays">0</span><span class="stat-label">Дней выполнено</span></div>
+        <div class="stat-cell"><span class="stat-val" id="mSleep">0</span><span class="stat-label">Ночей до 23:00</span></div>
+        <div class="stat-cell"><span class="stat-val" id="mFlow">—</span><span class="stat-label">Поток средн.</span></div>
+        <div class="stat-cell"><span class="stat-val" id="mScore">—</span><span class="stat-label">Оценка средн.</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sec-label">Оценка дня — 30 дней</div>
+    <div class="summary-card"><div class="bar-chart" id="cycleChart"></div></div>
+  </div>
+  <div class="sec">
+    <div class="sec-label">Недели месяца — оценка средн.</div>
+    <div class="summary-card"><div id="monthWeeks"></div></div>
+  </div>
+</div>
+
+<!-- ===== INFLUENCE (full curriculum) ===== -->
+<div id="page-influence" class="page">
+  <div class="page-header">
+    <div class="eyebrow">Школа влияния · Наставник</div>
+    <h1 class="page-title">Искусство <em>влияния</em></h1>
+    <div style="font-size:11px;color:var(--mid);margin-top:8px;line-height:1.5">Новая тема каждый день. Теория, живой пример, вопросы и источники для углубления.</div>
+  </div>
+  <div class="influence-week" id="influenceWeekNav"></div>
+  <div class="sec" id="influenceFull" style="padding-top:4px"></div>
+</div>
+<div id="page-scores" class="page">
+  <div class="page-header">
+    <div class="eyebrow">Оценки и динамика</div>
+    <h1 class="page-title">Где я <em>расту</em></h1>
+  </div>
+  <div class="sec">
+    <div class="score-card">
+      <div class="score-title">Четыре столпа — среднее за 30 дней</div>
+      <div class="score-sub">Видно, какая опора отстаёт</div>
+      <div id="pillarScores"></div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="score-card">
+      <div class="score-title">Состояние потока</div>
+      <div class="score-sub">Уверенность в общении по дням</div>
+      <div class="bar-chart" id="flowChart"></div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="score-card">
+      <div class="score-title">Лучшие аффирмации</div>
+      <div class="score-sub">Те, что резонируют сильнее — оценка 4–5★</div>
+      <div id="topAffirmations"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== RECORDS ===== -->
+<div id="page-records" class="page">
+  <div class="page-header">
+    <div class="eyebrow">Личные рекорды</div>
+    <h1 class="page-title"><em>Fortes fortuna</em> adiuvat</h1>
+  </div>
+  <div class="sec">
+    <div class="record-card">
+      <div class="record-title">Цели и рекорды</div>
+      <div class="record-row"><div style="flex:1"><div class="record-label">Отжимания за подход</div><div class="record-bar-wrap"><div class="record-bar" id="bar_push" style="width:0%"></div></div></div><div style="text-align:right"><div class="record-best" id="rec_push">45</div><div class="record-target">цель: 150</div></div></div>
+      <div class="record-row"><div style="flex:1"><div class="record-label">Подтягивания за подход</div><div class="record-bar-wrap"><div class="record-bar" id="bar_pull" style="width:0%"></div></div></div><div style="text-align:right"><div class="record-best" id="rec_pull">8</div><div class="record-target">цель: 30</div></div></div>
+      <div class="record-row"><div style="flex:1"><div class="record-label">Пресс за подход</div><div class="record-bar-wrap"><div class="record-bar" id="bar_abs" style="width:0%"></div></div></div><div style="text-align:right"><div class="record-best" id="rec_abs">40</div><div class="record-target">цель: 100</div></div></div>
+      <div class="record-row"><div style="flex:1"><div class="record-label">Планка на турнике (сек)</div><div class="record-bar-wrap"><div class="record-bar" id="bar_plank" style="width:0%"></div></div></div><div style="text-align:right"><div class="record-best" id="rec_plank">15</div><div class="record-target">цель: 60</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== AFFIRMATIONS ===== -->
+<div id="page-affirmations" class="page">
+  <div class="page-header">
+    <div class="eyebrow">Аффирмации · Оценки</div>
+    <h1 class="page-title">Слова <em>силы</em></h1>
+    <div style="font-size:11px;color:var(--mid);margin-top:8px;line-height:1.5">Оцени каждую. Лучшие (4–5★) войдут в ежедневный ритуал.</div>
+  </div>
+  <div class="aff-filter" id="affFilter"></div>
+  <div class="sec" id="affirmationsPage" style="padding-top:0"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY='nastavnik_v3';
+const DAYS=['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+const MONTHS=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const DAY_SHORT=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+
+const DAILY_Q=[
+  '«Что сегодня было моим — а не ответом на чужое?»',
+  '«Nusquam est qui ubique est — где ты был по-настоящему?»',
+  '«Что я сделал сегодня, не спрашивая разрешения?»',
+  '«Момент, когда тело чувствовало себя живым — что это было?»',
+  '«Vincit qui se vincit — где ты победил себя сегодня?»',
+  '«Что ты сказал или сделал без страха оценки?»',
+  '«Три слова твоего дня. Честно.»'
+];
+
+// ~30 affirmations across languages
+const AFFIRMATIONS=[
+  {o:'Fortes fortuna adiuvat',t:'Судьба помогает смелым',s:'Теренций / Вергилий',lang:'lat'},
+  {o:'Nemo me impune lacessit',t:'Никто не тронет меня безнаказанно',s:'Девиз Шотландии',lang:'lat'},
+  {o:'Dum spiro, spero',t:'Пока дышу — надеюсь',s:'Цицерон',lang:'lat'},
+  {o:'Vincit qui se vincit',t:'Побеждает тот, кто побеждает себя',s:'Латинская сентенция',lang:'lat'},
+  {o:'Nosce te ipsum',t:'Познай себя',s:'Дельфийский оракул (лат.)',lang:'lat'},
+  {o:'Per aspera ad astra',t:'Через тернии — к звёздам',s:'Сенека',lang:'lat'},
+  {o:'Audentes fortuna iuvat',t:'Дерзающим помогает фортуна',s:'Вергилий, Энеида',lang:'lat'},
+  {o:'Carpe diem',t:'Лови день',s:'Гораций',lang:'lat'},
+  {o:'Amor fati',t:'Люби свою судьбу',s:'Ницше (через стоиков)',lang:'lat'},
+  {o:'Sum quod sum',t:'Я есть то, что я есть',s:'Латинская формула',lang:'lat'},
+  {o:'Igne natura renovatur integra',t:'Огнём природа обновляется целиком',s:'Алхимический принцип',lang:'lat'},
+  {o:'Γνῶθι σεαυτόν',t:'Познай самого себя',s:'Дельфийский храм',lang:'gr'},
+  {o:'Ἴσθι οἷος εἶ',t:'Будь тем, кто ты есть',s:'Пиндар, Олимпийские оды',lang:'gr'},
+  {o:'Καλὸς κἀγαθός',t:'Прекрасный и доблестный (калокагатия)',s:'Греческий идеал',lang:'gr'},
+  {o:'Μηδὲν ἄγαν',t:'Ничего сверх меры',s:'Дельфийская максима',lang:'gr'},
+  {o:'Ἀρετή',t:'Доблесть, высшее совершенство себя',s:'Гомер / Аристотель',lang:'gr'},
+  {o:'La beauté sauvera le monde',t:'Красота спасёт мир',s:'Достоевский (фр.)',lang:'fr'},
+  {o:'Je suis ce que je fais',t:'Я есть то, что я делаю',s:'Сартр',lang:'fr'},
+  {o:'L\'audace, encore l\'audace, toujours l\'audace',t:'Смелость, ещё смелость, всегда смелость',s:'Дантон',lang:'fr'},
+  {o:'Deviens ce que tu es',t:'Стань тем, кто ты есть',s:'Ницше (фр. перевод)',lang:'fr'},
+  {o:'Il faut cultiver son jardin',t:'Надо возделывать свой сад',s:'Вольтер, Кандид',lang:'fr'},
+  {o:'Chi va piano va sano e va lontano',t:'Кто идёт спокойно — идёт здраво и далеко',s:'Итальянская пословица',lang:'it'},
+  {o:'Volere è potere',t:'Хотеть — значит мочь',s:'Итальянская пословица',lang:'it'},
+  {o:'Chi non risica non rosica',t:'Кто не рискует — не получает',s:'Итальянская пословица',lang:'it'},
+  {o:'L\'arte di esistere',t:'Искусство существовать',s:'Итальянский идеал',lang:'it'},
+  {o:'Я есмь Сущий',t:'Бог открывает имя Моисею',s:'Исход 3:14',lang:'bib'},
+  {o:'Дивно устроен я',t:'«Дивно устроен я» — о ценности тела',s:'Псалом 138:14',lang:'bib'},
+  {o:'Всё могу в укрепляющем меня',t:'Источник силы вне страха',s:'Филиппийцам 4:13',lang:'bib'},
+  {o:'Не бойся, ибо Я с тобою',t:'Опора против страха оценки',s:'Исаия 41:10',lang:'bib'},
+  {o:'Я действую — я не реагирую',t:'Стой прямо, напряги кор, произнеси на выдохе',s:'Ритуал воли',lang:'ru'},
+  {o:'Моя красота — моя правда',t:'Телесная аффирмация — проработай место, где тело дрожит',s:'Ритуал',lang:'ru'},
+  {o:'Я предприниматель самого себя',t:'Я инвестирую в себя каждый день',s:'Ритуал (по Фуко)',lang:'ru'},
+];
+
+const LANG_NAMES={lat:'Латынь',gr:'Греческий',fr:'Французский',it:'Итальянский',bib:'Библия',ru:'Русский'};
+
+// Pools of 3-exercise sets per pillar. Index by day-of-week for rotation; sets repeat across the week.
+// Long voice affirmations (50-200 chars) — one per day-of-week, for "Голос как влияние"
+const VOICE_AFFIRMATIONS=[
+  'Мой голос — это не звук, это присутствие. Когда я говорю медленно и низко, комната замолкает не потому что я громче, а потому что я спокоен и уверен в каждом своём слове.',
+  'Я не доказываю свою ценность — я её излучаю. Тон ровный, дыхание глубокое, паузы мои. Тот, кто перебивает, торопится. Тот, кто уверен, может позволить себе тишину.',
+  'Моя речь течёт из груди, не из горла. Я чувствую вибрацию в переносице, опору в диафрагме. Я звучу так, как звучит человек, которому нечего бояться и нечего скрывать.',
+  'Я говорю — и меня слышат, потому что я сам слышу себя. Каждое слово выбрано, ни одно не лишнее. Моя сдержанность весомее чужого крика.',
+  'Я владею паузой. Молчание перед ответом — не слабость, а власть. Я не заполняю тишину из тревоги, я держу её, пока она работает на меня.',
+  'Мой голос дерзок и тёпел одновременно. Я могу очаровать и могу поставить границу — и то, и другое без повышения тона. Это и есть зрелая сила.',
+  'Я красив в том, как я говорю. Тягучесть, ритм, дыхание — это моя проекция в мир. Я не прошу внимания, я создаю поле, в которое люди входят сами.'
+];
+
+// Daily influence curriculum (rotates by day-of-week). Built by Nastavnik from SberUniversity material.
+// Each: theory -> examples (Nastavnik's) -> reflection questions -> sources
+const INFLUENCE_PROGRAM=[
+{
+  topic:`Гарвардский метод переговоров`,
+  author:`Роджер Фишер, Уильям Ури, Брюс Паттон · Гарвардский переговорный проект`,
+  theory:[`Гарвардский метод (принципиальные переговоры) родился как ответ на вечную ложную дилемму: быть «мягким» и уступить ради отношений, или быть «жёстким» и продавить ценой отношений. Фишер и Ури сказали: это ложный выбор. Есть третий путь — быть мягким к людям и жёстким к проблеме. Метод стоит на четырёх китах.`,`Первый — отделяй человека от проблемы. Люди не компьютеры: за столом сидят эмоции, самолюбие, страх потерять лицо. Когда ты атакуешь позицию человека, он слышит атаку на себя и переходит в оборону. Решение: встань с оппонентом плечом к плечу против проблемы, а не лицом к лицу против него. «Мы вместе против этой задачи», а не «я против тебя».`,`Второй — фокус на интересах, а не на позициях. Позиция — это то, что человек требует вслух («хочу окно закрытым»). Интерес — то, зачем ему это («боюсь сквозняка»). За одной позицией часто стоит несколько интересов, и у разных позиций интересы могут совпадать. Классический пример: двое делят апельсин, спорят, режут пополам. Один выжимает сок и выбрасывает кожуру, другому нужна была только цедра для выпечки. Спорили о позициях («мне апельсин») — потеряли половину ценности. Спросили бы об интересах — каждому досталось бы целое.`,`Третий — изобретай взаимовыгодные варианты. Не хватай первое решение. Сначала расширь пирог: устрой мозговой штурм без критики, накидай много вариантов, и только потом выбирай. Жёсткое правило — отдели придумывание от оценки, иначе критик убьёт идеи на взлёте.`,`Четвёртый — настаивай на объективных критериях. Когда интересы прямо сталкиваются, не меряйтесь силой воли. Найдите внешний справедливый стандарт — рыночную цену, закон, прецедент, экспертную оценку. Тогда уступаешь не человеку (унизительно), а принципу (достойно).`,`И главный страховочный трос — BATNA (Best Alternative To a Negotiated Agreement), твоя лучшая альтернатива, если договориться не выйдет. BATNA — источник твоей силы. Чем лучше твоя альтернатива, тем меньше ты зависишь от этого конкретного соглашения и тем спокойнее держишься. Кто знает свою BATNA и улучшил её заранее, тот может позволить себе встать и уйти — и именно поэтому чаще получает хорошие условия.`],
+  example:`Представь средневековый город, два пекаря и одна мельница, что мелет муку только утром. Оба врываются на рассвете, орут «моя очередь!», хватают друг друга за грудки — это битва позиций. Мельник устал от драк и однажды спрашивает: «А зачем тебе именно утро?». Первый: «Мой хлеб берут к обеду, мне нужна мука к рассвету». Второй: «А мне всё равно когда — я пеку медленные караваи на завтра, мне лишь бы за день успеть». Оказалось, их интересы вообще не сталкивались — сталкивались только позиции. Один мелет на рассвете, другой днём, мельница загружена вдвое лучше, оба счастливы. Теперь переведи это на свою службу: товарищ «занял» турник, ты вспыхнул. Позиция — «он мой». Спроси про интерес: ему нужно 10 минут на подходы — а тебе турник нужен через полчаса. Сталкивались не вы, а ваши непроговорённые позиции.`,
+  questions:`Вспомни последний спор, где ты упёрся в позицию. Какой интерес стоял за ней — чего ты хотел на самом деле? А за позицией оппонента? Знал ли ты свою BATNA — что бы ты делал, если б не договорились? И главное: можно ли было улучшить эту альтернативу заранее, чтобы держаться увереннее?`,
+  sources:[`Р. Фишер, У. Ури, Б. Паттон «Переговоры без поражения. Гарвардский метод» (Getting to Yes) — первоисточник, обязателен.`,`У. Ури «Как преодолеть НЕТ: переговоры в трудных ситуациях» (Getting Past No) — продолжение про сложных оппонентов.`,`Гарвардская программа по переговорам (PON), program on negotiation на pon.harvard.edu — статьи и кейсы.`,`Д. Малхотра, М. Бейзерман «Гений переговоров» — современное развитие гарвардской школы.`,`Р. Фишер, Д. Шапиро «Эмоции в переговорах» (Beyond Reason) — про человеческий фактор за столом.`,`СберУниверситет — карточка «Гарвардский метод ведения переговоров».`]
+},
+{
+  topic:`Стили поведения в конфликтах`,
+  author:`Кеннет Томас, Ральф Килманн · модель TKI (1974)`,
+  theory:[`Томас и Килманн в начале 1970-х задались вопросом: почему одни и те же люди ведут себя в конфликтах так по-разному? Они построили карту из двух осей. Первая — напористость (assertiveness): насколько ты стараешься удовлетворить свои интересы. Вторая — кооперативность (cooperativeness): насколько ты стараешься удовлетворить интересы другого. Пересечение этих осей даёт пять стилей.`,`Соперничество (напор высокий, кооперация низкая): я добиваюсь своего за счёт другого. Использую власть, давление, аргументы — чтобы победить. Уместно, когда нужно быстрое решение, когда на кону принцип, когда ты прав и времени на дискуссию нет. Цена — отношения и то, что проигравший затаит обиду.`,`Приспособление (напор низкий, кооперация высокая): я уступаю, жертвую своим ради другого. Уместно, когда вопрос тебе не так важен, как ему, когда ты хочешь сохранить отношения или накопить «социальный кредит». Опасность — если уступаешь всегда, тебя перестают принимать всерьёз.`,`Избегание (напор низкий, кооперация низкая): я ухожу от конфликта, откладываю, не вступаю. Часто это мудрость — не каждую провокацию стоит принимать. Уместно, когда вопрос пустяковый, когда эмоции зашкаливают и нужна пауза, когда втягивают в чужую игру за статус. Но хроническое избегание = проблемы копятся и взрываются позже.`,`Компромисс (середина по обеим осям): оба чуть уступают, оба чуть получают. Быстро, справедливо на вид, но никто не удовлетворён полностью — делят разницу. Хорош под цейтнот и для равных по силе сторон.`,`Сотрудничество (напор высокий, кооперация высокая) — вершина: я ищу решение, где выигрывают оба полностью. Требует времени, доверия, копания в интересах. Это и есть гарвардский метод в действии. Уместно, когда отношения и результат оба важны.`,`Главная мысль Томаса-Килманна: нет «правильного» стиля. Есть уместный под ситуацию. Незрелость — это автоматизм: человек под давлением всегда бьёт в соперничество или всегда прячется в избегание, не выбирая. Зрелость — это свобода выбрать стиль осознанно, владеть всеми пятью и доставать нужный, как инструмент из ящика.`],
+  example:`Вообрази пятерых фехтовальщиков на одном турнире. Первый — Берсерк: летит вперёд, рубит, побеждает или гибнет (соперничество). Второй — Дипломат: при первом же выпаде опускает клинок и кланяется, сохраняя дружбу (приспособление). Третий — Призрак: отступает в тень, ждёт, не принимает боя, который не нужен (избегание). Четвёртый — Купец: предлагает «давай каждый отдаст по очку и разойдёмся» (компромисс). Пятый — Мастер: останавливает бой и говорит «зачем мы вообще деремся? Может, нам нужно одно и то же» — и находит решение, где оба уходят с победой (сотрудничество). А теперь правда: великий боец — это не один из пятерых. Это тот, кто владеет всеми пятью и в каждой схватке достаёт нужный стиль. С удавом-конкурентом, который провоцирует тебя при других, лучший ход часто не Берсерк (он этого и ждёт), а Призрак — не дать втянуть себя. А с товарищем, которым дорожишь, — Мастер.`,
+  questions:`Какой стиль у тебя включается на автомате под давлением? Где этот автоматизм тебя спасал, а где разрушал? Вспомни недавний конфликт: какой стиль ты применил и какой был бы уместнее? Какой из пяти стилей даётся тебе труднее всего — и почему именно его ты избегаешь?`,
+  sources:[`K. Thomas, R. Kilmann «Thomas-Kilmann Conflict Mode Instrument» (TKI) — первоисточник, опросник из 30 пар.`,`K. Thomas «Conflict and Conflict Management» в Handbook of Industrial and Organizational Psychology — академическая база.`,`Р. Блейк, Дж. Моутон «Управленческая решётка» (Managerial Grid) — модель-предшественник двух осей.`,`G. R. Shell «Bargaining for Advantage» — применение стилей в переговорах.`,`Kilmann Diagnostics (kilmanndiagnostics.com) — официальные материалы авторов.`,`СберУниверситет — карточка «Стили поведения в конфликтах».`]
+},
+{
+  topic:`Приём «Я-высказывание»`,
+  author:`Томас Гордон · техника конструктивной коммуникации`,
+  theory:[`Я-высказывание (I-message) придумал психолог Томас Гордон в 1960-х, обучая родителей и руководителей. Идея простая и мощная: когда между людьми напряжение, способ сказать важнее того, что сказано. Одна и та же претензия, поданная через «ты», запускает войну, а поданная через «я» — открывает разговор.`,`«Ты-высказывание» — это скрытое обвинение: «ты меня игнорируешь», «ты безответственный», «ты всегда так». Оно бьёт прямо в самооценку собеседника. Мозг человека воспринимает это как нападение и включает защиту: он либо контратакует, либо замыкается, либо оправдывается. В любом случае он больше не слышит тебя — он защищает себя. Разговор проигран на первой фразе.`,`«Я-высказывание» переносит фокус с обвинения другого на описание своего опыта. У него четыре части. Первая — факт без оценки: что конкретно произошло, language камеры, а не судьи («когда занятие отменяется без предупреждения», а не «когда ты безответственно сливаешься»). Вторая — моё чувство: что я при этом испытываю («я расстраиваюсь», «мне обидно»). Третья — моя потребность: почему это чувство возникает, что мне важно («потому что для меня важна надёжность»). Четвёртая — просьба: конкретное предложение на будущее («можем договариваться заранее?»).`,`Почему это работает на уровне нейробиологии: факт без оценки не активирует защиту, потому что с фактом не поспоришь. Чувство нельзя оспорить — оно твоё, оно не обвинение, а информация. Потребность объясняет чувство и делает тебя понятным, а не капризным. Просьба даёт выход — человеку есть что сделать, кроме как обороняться.`,`Важная тонкость: я-высказывание — не манипуляция в маске вежливости. Если ты говоришь «я чувствую, что ты придурок» — это всё ещё ты-обвинение в костюме. Настоящее чувство — это «обида», «тревога», «злость», а не замаскированная оценка другого. Честность с собой о собственном чувстве — половина силы приёма.`],
+  example:`Представь двух альпинистов в одной связке на отвесной стене. Один сорвался отдохнуть на выступ, не предупредив, и верёвка резко дёрнула второго над пропастью. Внизу у костра первый вариант разговора: «Ты совсем безголовый? Из-за тебя я чуть не сорвался!». Напарник вскипает: «Сам виноват, надо было следить!» — и вот они уже враги на одной верёвке, что завтра убьёт обоих. Второй вариант: «Когда ты остановился без сигнала (факт), я похолодел от страха (чувство), потому что от связки зависит моя жизнь (потребность). Давай договоримся о коротком крике перед остановкой? (просьба)». Напарнику нечего защищать — его не назвали идиотом, ему описали, что пережил другой. Он кивает. Связка цела. Теперь твоя жизнь: вместо «вы меня избегаете» (удар, вызовет «да нужен ты нам») → «когда я зову на бокс и не слышу ответа (факт), мне обидно (чувство), потому что это общение мне важно (потребность). Скажете прямо, если не хотите? (просьба)».`,
+  questions:`Вспомни недавнее «ты...» с обвинением, которое ты бросил или проглотил. Разложи его на факт + чувство + потребность + просьбу — как бы оно звучало? Какое чувство пряталось под обвинением? И заметь телом: что меняется в груди и горле, когда ты говоришь о себе, а не нападаешь?`,
+  sources:[`Т. Гордон «Тренинг эффективного родителя» (P.E.T.) и «Лидер-тренинг» (L.E.T.) — первоисточник I-message.`,`М. Розенберг «Ненасильственное общение» (Nonviolent Communication) — глубокое развитие: наблюдение-чувство-потребность-просьба.`,`К. Паттерсон и др. «Трудные диалоги» (Crucial Conversations) — практика в высоких ставках.`,`Дж. Готтман «The Seven Principles for Making Marriage Work» — про «мягкий старт» разговора.`,`Harvard Business Review, статьи по difficult conversations и feedback.`,`СберУниверситет — карточка «Приём конструктивной коммуникации Я-высказывание».`]
+},
+{
+  topic:`Лестница умозаключений`,
+  author:`Крис Аргирис · развита Питером Сенге`,
+  theory:[`Лестницу умозаключений описал гарвардский профессор Крис Аргирис, а популяризировал Питер Сенге в «Пятой дисциплине». Это модель того, как мы за доли секунды проходим путь от голого факта к убеждению и действию — и где по дороге обманываем себя.`,`Представь лестницу из семи ступеней снизу вверх. Ступень 1 — наблюдаемые данные: всё, что реально произошло, как записала бы камера. Ступень 2 — отбор: из всего потока я бессознательно выхватываю лишь часть, ту, что замечаю. Ступень 3 — смыслы: я придаю отобранному значение. Ступень 4 — допущения: достраиваю недостающее своими предположениями. Ступень 5 — выводы: делаю заключение. Ступень 6 — убеждения: вывод укрепляет мою картину мира. Ступень 7 — действия: я поступаю исходя из убеждений.`,`Главная ловушка: мы проскакиваем все семь ступеней мгновенно и не замечаем подъёма. Нам кажется, что от факта («он не ответил») мы сразу в истине («он меня презирает»). Но между ними — пять ступеней интерпретации, на каждой из которых мы могли свернуть иначе.`,`Вторая ловушка — «рефлексивная петля»: наши убеждения влияют на то, какие данные мы вообще замечаем в следующий раз. Решив, что человек тебя презирает, ты начинаешь выхватывать только подтверждения этого и слепнешь к опровержениям. Лестница закольцовывается и сама себя кормит.`,`Противоядие — научиться спускаться по лестнице. Поймав себя на сильном выводе или эмоции, спроси: какие голые данные на дне? («он не написал» — это факт; «презирает» — это седьмая ступень). Какие ещё смыслы подходят к тем же данным? Какие допущения я добавил от себя? Это не значит, что твой вывод всегда ложен — иногда человек правда враждебен. Но ты возвращаешь себе выбор: реагировать на факт, а не на свою надстройку над ним.`],
+  example:`Вообрази детектива на месте происшествия. На полу — разбитая чашка (данные). Новичок мгновенно взлетает по лестнице: разбита чашка → была драка → здесь произошло преступление → жилец опасен → надо вызывать подмогу. Он уже тянется к рации. Опытный детектив кладёт ему руку на плечо и спускает обратно: «Стоп. Что мы видим? Разбитую чашку. Только это. Кот мог столкнуть. Рука дрогнула спросонья. Сквозняк хлопнул дверью. Десять историй ведут к одной чашке — а ты выбрал самую страшную и уже достал оружие». Теперь твоя реальная лестница, из твоих же слов: товарищи не позвали на бокс (данные) → «я для них пустое место» (смысл) → «я слаб, раз не могу их победить» (убеждение, седьмая ступень) → закрываюсь, перестаю звать (действие). Спустись, как детектив. Голый факт — «не позвали в этот раз». Сколько ещё историй ведут к нему? Устали. Стеснялись при других. Были заняты собой и вообще не подумали. Факт один — а ты, как новичок, схватил самую болезненную версию и уже достал оружие против себя.`,
+  questions:`Возьми недавнюю обиду или вспышку. Какой голый факт лежал на самом дне лестницы — что записала бы камера? Какие ступени смыслов и допущений ты надстроил сверху? Найди другой вывод, который так же хорошо ложится на тот же факт, но не ранит тебя. И честно: ты потом искал подтверждения своему выводу — и не замечал опровержений?`,
+  sources:[`К. Аргирис «Overcoming Organizational Defenses» — первоисточник Ladder of Inference.`,`П. Сенге «Пятая дисциплина» (The Fifth Discipline) — глава о ментальных моделях, лучшее изложение.`,`К. Аргирис, Д. Шён «Theory in Practice» — теория действия и двойная петля обучения.`,`Д. Канеман «Думай медленно… решай быстро» — про Систему 1 и быстрые автоматические выводы.`,`The Fifth Discipline Fieldbook (Senge et al.) — практические упражнения по лестнице.`,`СберУниверситет — карточка «Анализ конфликта: модель Лестница умозаключений».`]
+},
+{
+  topic:`Фундаментальные потребности в конфликте`,
+  author:`Роджер Фишер, Даниэль Шапиро · Гарвард`,
+  theory:[`Фишер и Шапиро в книге «Эмоции в переговорах» сделали важное открытие: за большинством конфликтов стоит не сам предмет спора, а задетые эмоциональные потребности. Люди редко воюют из-за вещи как таковой — они воюют, потому что в ходе спора ранено что-то глубинное. Авторы выделили пять «ядерных интересов» (core concerns), универсальных для всех людей.`,`Признание (appreciation): мои мысли, чувства и поступки замечают и ценят. Когда человека обесценивают, отмахиваются от его слов, не признают его вклад — он вспыхивает, даже если внешне спор о пустяке. Дать признание — мгновенно снизить накал.`,`Аффилиация (affiliation): я свой, а не чужак; между нами связь, а не стена. Когда человека выталкивают из круга, обращаются как с посторонним, он защищается. Сократить дистанцию, найти общее, обращаться как к союзнику — обезоруживает.`,`Автономия (autonomy): мою свободу решать уважают, на меня не давят, за меня не решают. Покушение на автономию («ты обязан», «у тебя нет выбора») вызывает сопротивление, даже когда по сути человек согласен — он бунтует против формы, против отнятой свободы.`,`Статус (status): моё положение признано, меня не принижают, не ставят ниже, чем я есть. Это самая горючая потребность в мужских иерархиях. Публичное принижение статуса — почти гарантированный конфликт.`,`Роль (role): моя роль осмысленна, значима, а не унизительна или пуста. Когда человеку навязывают унизительную или бессмысленную роль, он сопротивляется.`,`Практическая сила модели двойная. Диагностика: когда ты или другой кипите «из-за ерунды», спроси — какая из пяти потребностей задета на самом деле? Назвав её, ты видишь настоящую ставку. И рычаг влияния: чтобы расположить человека и снять конфликт, дай ему то, чего он голоден — признание, причастность, уважение к автономии. Это не лесть, а попадание в реальную потребность.`],
+  example:`Вообрази королевский пир. Старого рыцаря усадили на дальний край стола, ниже молодых выскочек. Подают то же вино, ту же дичь — еды вдоволь, спорить не о чем. Но рыцарь чернеет лицом, роняет резкое слово, того гляди выхватит меч «из-за места за столом». Глупец решит, что дело в стуле. Мудрец видит: задет статус (его посадили ниже, чем он заслужил) и признание (его заслуги забыли). Одна фраза короля через весь зал — «Без этого человека мы бы не выиграли ту войну» — и рыцарь оттаивает, хотя стул не сдвинулся ни на палец. Меч остаётся в ножнах. Теперь твоя жизнь: тебя «колют» конкуренты, и кажется, спор о пустяке. Но что задето на самом деле? Почти всегда — статус (они оспаривают твоё положение) и признание (не ценят твой блеск). Увидев настоящую ставку, ты перестаёшь воевать за «стул» и либо защищаешь то, что реально на кону, либо — высший пилотаж — даёшь сопернику крупицу признания и гасишь его пыл, потому что под агрессией у него та же голодная потребность, что у тебя.`,
+  questions:`В последнем конфликте какая из пяти потребностей была задета у тебя — признание, аффилиация, автономия, статус или роль? А у второй стороны, если честно присмотреться? Что бы изменилось, дай ты оппоненту прямое признание в начале разговора? И вопрос потоньше: какая из пяти потребностей у тебя самая «горючая» — где тебя задеть легче всего?`,
+  sources:[`Р. Фишер, Д. Шапиро «Эмоции в переговорах» (Beyond Reason: Using Emotions as You Negotiate) — первоисточник пяти потребностей.`,`Д. Шапiro «Переговоры с трудными людьми» (Negotiating the Nonnegotiable) — про идентичность в конфликте.`,`А. Маслоу «Мотивация и личность» — классическая иерархия потребностей как фон.`,`У. Глассер «Теория выбора» — базовые психологические потребности человека.`,`Гарвардская программа по переговорам (PON) — материалы по эмоциям в переговорах.`,`СберУниверситет — карточка «Фундаментальные потребности в основе конфликтов».`]
+},
+{
+  topic:`Принцип пирамиды`,
+  author:`Барбара Минто · McKinsey`,
+  theory:[`Принцип пирамиды разработала Барбара Минто, первая женщина-консультант McKinsey, чтобы научить консультантов доносить мысли так, чтобы их понимали с первого раза. Это самый практичный инструмент влияния через речь и письмо.`,`Главное правило, переворачивающее привычку: вывод — в начало, а не в конец. Большинство людей рассказывают, как детектив в романе: сначала улики, потом долгие рассуждения, и только в финале — «а убийца дворецкий». В жизни так нельзя: слушатель теряет нить, теряет терпение, и к выводу приходит уже раздражённым или отвлёкшимся. Сильный говорящий объявляет ответ первым, а потом подпирает его аргументами.`,`Структура — пирамида. На вершине — одна главная мысль (твой ответ, твоя просьба, твой тезис). Под ней — 3-4 аргумента, которые её поддерживают. Под каждым аргументом — факты и данные, которые поддерживают уже его. Любой элемент пирамиды отвечает на вопрос «почему?» того, что над ним, и обобщает то, что под ним.`,`Аргументы на одном уровне должны подчиняться принципу MECE: взаимно не пересекаться и вместе покрывать тему (Mutually Exclusive, Collectively Exhaustive). Никакого нахлёста, никаких дыр. Три чётких непересекающихся довода сильнее семи путаных.`,`Для введения Минто предлагает структуру SCQA: Ситуация (контекст, с которым все согласны) → Осложнение (что изменилось, в чём проблема) → Вопрос (который из этого встаёт) → Ответ (твой тезис, вершина пирамиды). Это плавно вводит слушателя в курс и подводит к твоей мысли как к естественному ответу на назревший вопрос.`,`Почему это влияние, а не просто оформление: человеческий ум держит за раз 3-4 элемента. Пирамида упаковывает мысль под этот лимит, и потому твоя позиция входит в голову собеседника целиком, не рассыпавшись. Тебя не просто слышат — тебя понимают и запоминают, а понятого и запомненного гораздо легче убедить.`],
+  example:`Вообрази гонца, что прискакал в осаждённый замок с поля боя. Слабый гонец, задыхаясь: «Ну, мы вышли на рассвете, потом обошли холм, левый фланг дрогнул, потом подоспела конница, лучники почти кончились, и вот, в общем… мы победили». Полководец чуть не поседел, пока дослушал — а ведь решение нужно было принять на первом слове. Сильный гонец влетает и рубит сразу с вершины пирамиды: «Мы победили! (тезис) Три причины: конница успела к флангу, погода сменилась в нашу пользу, и враг недооценил наш резерв (три аргумента)». За пять секунд полководец знает всё главное и уже отдаёт приказы. Теперь твоя речь. Слабо: «Ну, в прошлый раз так вышло, и ещё это, я подумал, может, наверное…». Сильно, с вершины: «Предлагаю тренироваться по утрам (тезис). Три причины: оба свежее, зал свободен, вечер остаётся целым (аргументы)». Скажи ответ первым — и тебя услышат как человека, который знает, чего хочет.`,
+  questions:`Вспомни случай, где ты долго подводил к мысли и видел, как собеседник угасает. Как бы прозвучало, начни ты с вывода? Что мешает тебе говорить главное первым — страх, что оборвут, или въевшаяся привычка сначала оправдаться? Возьми мысль, которую хочешь донести завтра: какая у неё вершина и какие три непересекающихся довода её держат?`,
+  sources:[`Б. Минто «Принцип пирамиды Минто» (The Pyramid Principle) — первоисточник, обязателен.`,`Дж. Желязны «Говори на языке диаграмм» (McKinsey) — визуальная подача той же логики.`,`Ч. Дахигг и материалы McKinsey по структурированной коммуникации.`,`К. Андерсон «TED Talks: официальное руководство» — структура убедительного выступления.`,`Г. Рейнольдс «Presentation Zen» — про ясность и фокус сообщения.`,`СберУниверситет — карточка «Принцип пирамиды в контексте эффективной коммуникации».`]
+},
+{
+  topic:`Управление эмоциями в конфликте · техника «Микроскоп»`,
+  author:`Техника саморегуляции · база: Гоулман, Либерман`,
+  theory:[`В конфликте первой гибнет не логика, а самообладание. Дэниел Гоулман назвал это «эмоциональным захватом» (amygdala hijack): миндалина — древний центр угрозы в мозге — за миллисекунды перехватывает управление у рассудка ещё до того, как ты осознал, что происходит. Сердце частит, дыхание сбивается, кровь отливает от коры, отвечающей за разумные решения. Ты уже кричишь или сжимаешься — а «ты разумный» подключится через секунды, когда дров уже наломано.`,`Ключевой факт нейробиологии, на котором стоит вся техника: называние эмоции словами снижает её власть. Исследования Мэттью Либермана (UCLA) показали — когда человек вербализует чувство («это злость», «это обида»), активность миндалины падает, а включается префронтальная кора, центр контроля. Этот эффект назвали «affect labeling»: назвал — значит, частично приручил. Безымянная эмоция владеет тобой; названная — возвращается под твою руку.`,`Техника «Микроскоп» строит на этом практику. Вместо того чтобы реагировать на раздражитель целиком, ты наводишь на него увеличительное стекло и дробишь на детали. Шаг 1 — заметь телесный сигнал (вспыхнуло в груди, сжалось горло) как сирену: «меня задело». Шаг 2 — наведи микроскоп: что именно задело? Не «он гад вообще», а точно — какое слово? какой тон? какой жест? при ком? Шаг 3 — назови чувство и причину: «меня задел его насмешливый тон при ребятах, потому что задет мой статус». Шаг 4 — физиологическая пауза: один медленный выдох в диафрагму (выдох длиннее вдоха включает парасимпатику, тормозящую захват). Шаг 5 — выбери ответ из рассудка, а не из рефлекса.`,`Почему дробление работает: когда ты разглядываешь раздражитель в деталях, ты вынужден включить кору (анализ, язык) — а она физиологически конкурирует с миндалиной. Сам акт точного наблюдения уже выводит тебя из захвата. Ты переводишь рычаг управления от «я отреагировал» к «я выбрал».`,`Важно: цель не подавить эмоцию (подавленная вернётся сильнее и осядет в теле), а назвать, прожить и не дать ей управлять рукой с «пультом». Злость может остаться — но решать будешь ты, а не она.`],
+  example:`Вообрази канатоходца над пропастью. Налетает порыв ветра (раздражитель). Новичок инстинктивно дёргается всем телом, машет руками — и летит вниз: тело отреагировало само, захват сработал. Мастер на том же канате при том же порыве делает обратное: микропауза, выдох, точное считывание — «ветер слева, сила средняя, смещаю вес на правую стопу на два сантиметра». Он раздробил угрозу на детали, включил расчёт вместо паники — и устоял. Конфликт — тот же канат. Удав бросает колкость при ребятах, тело вспыхивает, рука уже тянется к «пульту реакции» — нагрубить, сорваться, что он и ждёт. Наведи микроскоп: что именно задело — слово? тон? то, что при других? Назови: «задел тон при ребятах, потому что это удар по статусу». Выдох в живот. И рука с пульта возвращается к тебе: теперь ты выбираешь — холодно усмехнуться, промолчать с достоинством или ответить точно. Ветер не свалил канатоходца, потому что он его измерил, а не испугался.`,
+  questions:`Что физически происходит в твоём теле в первую секунду, когда тебя задели — где именно вспыхивает (грудь, горло, живот)? Если навести микроскоп на последнюю колкость: что было настоящим раздражителем — слово, тон или твоя интерпретация? Какая потребность под этим (вспомни пять ядерных)? И потренируйся: назови вслух последнюю свою сильную эмоцию одним точным словом — почувствовал, как чуть отпустило?`,
+  sources:[`Д. Гоулман «Эмоциональный интеллект» (Emotional Intelligence) — про amygdala hijack, первоисточник понятия.`,`M. Lieberman et al. «Putting Feelings Into Words» (UCLA, 2007) — научная база affect labeling.`,`Б. ван дер Колк «Тело помнит всё» (The Body Keeps the Score) — про телесную природу эмоций и регуляцию.`,`В. Хоффельд, работы по нейробиологии переговоров; С. Розенберг «Accessing the Healing Power of the Vagus Nerve» — дыхание и парасимпатика.`,`К. Паттерсон «Трудные диалоги» (Crucial Conversations) — самоконтроль в высоких ставках.`,`СберУниверситет — карточки «Управление эмоциями в конфликте» и «Техника управления эмоциями Микроскоп».`]
+},
+];
+
+const PILLAR_POOLS={
+  body:[
+    [
+      {t:'Второе дыхание',n:'На тренировке, когда устал — глубокий вдох, осознай решимость, взорвись. Поймай этот момент намеренно.'},
+      {t:'Скролл-стоп',n:'Когда тянешься к инсте от нехватки сигнала — замри на 10 сек. Спроси: мне нужна стимуляция или покой? Выбери.'},
+      {t:'Окно 14–17',n:'Используй второй пик энергии осознанно: одно дело, требующее драйва, помести именно сюда.'}
+    ],
+    [
+      {t:'Взрыв в движении',n:'Один спринт/подход на полной вовлечённости — как в футболе за мячом. Лёгкие на максимум, тело свободно.'},
+      {t:'Возбуждение = готовность',n:'Перед социальным моментом, где сжимаешься: переименуй дрожь. Не «угроза», а «готовность». Скажи телу.'},
+      {t:'Руль или огонь',n:'Заметь сегодня: тебя несёт импульс (огонь) или ты держишь цель (руль)? Просто назови, без оценки.'}
+    ],
+    [
+      {t:'На волне трудностей',n:'Найди момент хаоса/помехи в дне и отнесись как к кочке на склоне — микродействие, а не паника.'},
+      {t:'Сон как топливо',n:'Вечером тело шепчет «можешь» или «сдохни». Дай ему основу: режим до 23:00 — это и есть драйв на завтра.'},
+      {t:'Тело после нагрузки',n:'Час после тренировки — пик. Запомни это состояние телом, чтобы вызывать его потом по памяти.'}
+    ]
+  ],
+  beauty:[
+    [
+      {t:'Скан челюсти и взгляда',n:'30 сек: контур нижней челюсти, положение языка, подбородок, посадка головы. Почувствуй свою красоту намеренно.'},
+      {t:'Голос как влияние',voice:true,n:'Произнеси аффирмацию дня вслух, играя тоном: тягучесть, вибрация в гортани и переносице. Голос — твой аудиоканал проекции.'},
+      {t:'Разблокировка диафрагмы',n:'Скажи «я красив» и найди дрожь в пояснице/диафрагме/низе живота. Не закрывайся — дыши в эту зону, напряги и отпусти.'}
+    ],
+    [
+      {t:'Голос как влияние',voice:true,n:'Произнеси аффирмацию дня вслух. Низкий тон, опора в диафрагме, паузы. Услышь себя — и тебя услышат.'},
+      {t:'Дерзкая яркость',n:'Одна поза/жест на полную: грудь, осанка, плечи как демонстрация статуса. «Я блистаю, и это видно.»'},
+      {t:'Красота в движении',n:'Самое безопасное поле: покажи себя через движение тела — как демонстрируешь руки, как двигаешься. Здесь брони не нужно.'}
+    ],
+    [
+      {t:'Голос как влияние',voice:true,n:'Произнеси аффирмацию дня вслух. Медленно, из груди. Тишина перед словом — твоя власть.'},
+      {t:'Зеркало без суда',n:'Перед зеркалом 30 сек: «Сегодня мне нравится мой…» — одна конкретная деталь, без иронии, без «но».'},
+      {t:'Зона сомнения вниманием',n:'Низ живота, мочевой пузырь, диафрагма. Пройди вниманием медленно. Где закрылся — туда направь дыхание, верни чувствование.'}
+    ]
+  ],
+  skill:[
+    [
+      {t:'Влияние',n:'Открой вкладку «Влияние», изучи тему дня и примени её в одном реальном взаимодействии. Заметь, что изменилось.'},
+      {t:'Вопрос-лезвие',n:'То, к чему толкаешься сегодня — выбрано или компульсивно? Можешь остановиться без тревоги? Ответь себе честно.'},
+      {t:'Свобода и влияние',n:'Одно микродействие к цели «через год»: что сегодня дало тебе чуть больше свободы или влияния? Назови.'}
+    ],
+    [
+      {t:'Капитал дня',n:'Что я накопил в себе сегодня — навык, связь, характер? Одно слово. Ты инвестор в самого себя (Фуко).'},
+      {t:'Слабая связь',n:'Новое приходит от знакомых, не от близких. Был ли сегодня контакт-мост к новому? Или возможность его создать?'},
+      {t:'Чтение 10 минут',n:'«Семь дней в Гималаях» / «Листы Сада Мории» или иное. Даже страница. Питай дух, не только тело.'}
+    ],
+    [
+      {t:'К чему или от чего',n:'Сегодняшнее усилие — из изобилия (тянусь К свободе) или из нехватки (бегу ОТ унижения)? Просто заметь.'},
+      {t:'Видимость',n:'Компетентность необходима, но недостаточна. Сделал ли ты сегодня что-то ценное видимым? Или скрыл из скромности?'},
+      {t:'Право стремиться',n:'Поймай мысль «это не для таких как я». Оспорь её одним фактом из своего опыта мастерства.'}
+    ]
+  ],
+  will:[
+    [
+      {t:'Один выбор — мой',n:'Момент, где среда тянет реагировать (удав давит). Сделай иначе — маленькое, но своё. Зафиксируй.'},
+      {t:'Переписать атрибуцию',n:'Если была неудача: поймал «я слаб»? Перепиши на управляемое: «не та стратегия», «мало готовился». Это навык.'},
+      {t:'Стой как скала',n:'2 минуты в уверенной позе без движения. Ты держишь гравитацию, а не она тебя. Тело учит волю.'}
+    ],
+    [
+      {t:'Удав ≠ моя ценность',n:'Кто борется с твоим блеском — уже признал его (Элиас). Отдели чужую зависть от правды о себе. Назови одно вслух.'},
+      {t:'Остановка без вины',n:'Сегодня остановись на 3 минуты ничего не делая. Заметь: пришла тревога? Это и есть работа — выдержать паузу.'},
+      {t:'Сон — первооснова',n:'Дисциплину рушит сон. Реши заранее: во сколько гасишь экран. Один вечер выигранного отбоя = вся завтрашняя воля.'}
+    ],
+    [
+      {t:'Локус внутрь',n:'После трудности спроси не «кто виноват», а «что в моём ответе я могу изменить?». Реакция почти всегда в твоих руках.'},
+      {t:'Глубинная установка',n:'Поймай одну автоматическую мысль о себе («я недостаточно…»). Запиши её. Завтра оспоришь. Сегодня — просто увидь.'},
+      {t:'Выбрано или нет',n:'Ритм толкает тебя расти. Сегодня спроси: я расту, потому что хочу — или потому что боюсь остановиться?'}
+    ]
+  ]
+};
+
+const SCHEDULE={
+  1:{morning:[{id:'m1_1',tag:'Скакалка',title:'Скакалка 20 мин',note:'Простые / 3 мин двойные / 2 мин быстрые',time:'~25 мин'},{id:'m1_2',tag:'Бег',title:'5 кругов с ускорениями',note:'На 1, 3, 5 круге',time:'~20 мин'}],will:[{id:'w1_1',tag:'Воля · Тело',title:'★ Макс отжиманий до отказа',note:'Зафиксируй число. Выдыхай «могу» на каждом опускании.',time:'5 мин'},{id:'w1_2',tag:'Воля · Баланс',title:'★ Стойка на одной ноге, глаза закрыты',note:'30 сек × 3 каждой ногой. Хаос в теле — твоя кочка.',time:'5 мин'}],pillars:[{id:'p1_1',tag:'Тело',title:'Разминка общая 5 минут',note:''},{id:'p1_2',tag:'Красота',title:'Зеркало без суда — 30 сек',note:'«Сегодня мне нравится мой…» — без иронии.'},{id:'p1_3',tag:'Агентность',title:'Один выбор — мой',note:'Момент, где среда тянет реагировать — сделай иначе.'},{id:'p1_4',tag:'Слова',title:'Одна фраза без извинений',note:'Скажи своё — не смягчая.'}],evening:[]},
+  2:{morning:[],will:[{id:'w2_1',tag:'Воля · Сила',title:'★ Макс подтягиваний',note:'До отказа. Зависни 5 сек: «Я держу.»',time:'5 мин'},{id:'w2_2',tag:'Воля · Дыхание',title:'★ Задержка дыхания до границы',note:'Не максимум — граница. Удержи 5 сек после позыва.',time:'3 мин'}],pillars:[{id:'p2_1',tag:'Красота',title:'Зеркало без суда',note:'Отметь движение — как стоишь, как ходишь.'},{id:'p2_2',tag:'Агентность',title:'Один выбор — мой',note:''},{id:'p2_3',tag:'Самопредпр.',title:'5 мин: что я строю в себе',note:'Навык, статус, направление — одна мысль.'}],evening:[{id:'e2_1',tag:'Сила',title:'Штанга 3×12/10/8',note:'Перерыв 60 сек',time:'~15 мин'},{id:'e2_2',tag:'Сила',title:'Отжимания 4×25/20/25/20',note:'Перерыв 90 сек',time:'~12 мин'},{id:'e2_3',tag:'Турник',title:'Подъём ног до груди 3×15',note:'Поясница — контроль, без рывков',time:'~8 мин'},{id:'e2_4',tag:'Поясница',title:'Поясница с блином 5 кг 3×20/25/30',note:'Медленно. L2-L3 беречь.',time:'~8 мин'}]},
+  3:{morning:[{id:'m3_1',tag:'Разминка',title:'Разминка общая 20 мин',note:'',time:'20 мин'},{id:'m3_2',tag:'Дыхание',title:'Задержка 3×(30-10/40-10/50-10)',note:'',time:'10 мин'},{id:'m3_3',tag:'Бег',title:'5 кругов с 3 ускорениями',note:'На 1, 3, 5',time:'~20 мин'},{id:'m3_4',tag:'Скакалка',title:'7 простые/1 двойные/1 быстрые/1 двойные',note:'',time:'10 мин'},{id:'m3_5',tag:'Бег',title:'3 круга с 3 ускорениями',note:'',time:'~12 мин'}],will:[{id:'w3_1',tag:'Воля · Хаос',title:'★ Берпи с паузой на пике',note:'10 берпи. Зависни на 1 сек в прыжке. Это твои кочки.',time:'5 мин'}],pillars:[{id:'p3_1',tag:'Тело',title:'Ощути состояние после бега',note:'Трансгипофронтальность — ты в ней. Запомни чувство.'},{id:'p3_2',tag:'Красота',title:'Зеркало без суда',note:''},{id:'p3_3',tag:'Агентность',title:'Один выбор — мой',note:''}],evening:[]},
+  4:{morning:[],will:[{id:'w4_1',tag:'Воля · Пресс',title:'★ Макс подъёмов ног',note:'До отказа. Держи горизонталь 5 сек.',time:'5 мин'},{id:'w4_2',tag:'Воля · Координация',title:'★ Прыжки с разворотом 180°',note:'10 раз без паузы. Тело в воздухе — хаос.',time:'3 мин'}],pillars:[{id:'p4_1',tag:'Красота',title:'Зеркало без суда',note:''},{id:'p4_2',tag:'Самопредпр.',title:'Что я накапливаю в себе?',note:'Навык, связь, характер — одно слово.'},{id:'p4_3',tag:'Агентность',title:'Один выбор — мой',note:''}],evening:[]},
+  5:{morning:[{id:'m5_1',tag:'Бег',title:'3 круга',note:'',time:'~12 мин'},{id:'m5_2',tag:'Разминка',title:'Разминка 25 мин',note:'',time:'25 мин'},{id:'m5_3',tag:'Бег',title:'5 кругов с 3 ускорениями',note:'На 1, 3, 5',time:'~20 мин'},{id:'m5_4',tag:'Скакалка',title:'Скакалка 10 мин',note:'',time:'10 мин'},{id:'m5_5',tag:'Дыхание',title:'Задержка 3×(30-10/40-10/50-10)',note:'',time:'10 мин'}],will:[{id:'w5_1',tag:'Воля · Баланс',title:'★ Приседания с закрытыми глазами',note:'3×15. Чувствуй каждую микрокорректировку — как на склоне.',time:'5 мин'}],pillars:[{id:'p5_1',tag:'Тело',title:'Найди точку напряжения и расслабь',note:'Намеренно.'},{id:'p5_2',tag:'Красота',title:'Зеркало без суда',note:''},{id:'p5_3',tag:'Агентность',title:'Один выбор — мой',note:''}],evening:[{id:'e5_1',tag:'Гиря',title:'Подъём гири перед собой 2×3×15',note:'Каждой рукой. Нейтральный позвоночник.',time:'~10 мин'},{id:'e5_2',tag:'Гиря',title:'Кручение гири вокруг себя 2×4×10',note:'Влево и вправо',time:'~8 мин'},{id:'e5_3',tag:'Турник',title:'Подъём ног до груди 3×17',note:'Контроль поясницы',time:'~8 мин'},{id:'e5_4',tag:'Гиря',title:'Подсед с гирей 3×6/8/10',note:'',time:'~8 мин'},{id:'e5_5',tag:'Гиря',title:'Рывок гири 2×2',note:'Техника важнее веса',time:'~5 мин'}]},
+  6:{morning:[{id:'m6_1',tag:'Разминка',title:'Разминка 20 мин',note:'',time:'20 мин'},{id:'m6_2',tag:'Взрыв',title:'Берпи 4×20',note:'Отжимание + выпрыгивание с хлопком',time:'~15 мин'},{id:'m6_3',tag:'Скакалка',title:'Скакалка 3 мин',note:'',time:'3 мин'},{id:'m6_4',tag:'Бег',title:'8 кругов с 2 ускорениями',note:'На 6 и 8 круге',time:'~30 мин'},{id:'m6_5',tag:'Скакалка',title:'5 мин обычные / 1 мин двойные',note:'',time:'6 мин'},{id:'m6_6',tag:'Дыхание',title:'Задержка 3×(30-5/40-5/50-5)',note:'',time:'~8 мин'}],will:[{id:'w6_1',tag:'Воля · Пик',title:'★ СУББОТА: Максимальный забег',note:'Последний круг на максимуме. Когда уже нечем. Это «я могу».',time:'—'},{id:'w6_2',tag:'Воля · Красота',title:'★ Ритуал после тренировки',note:'Встань прямо, смотри вперёд 30 сек. Аффирмацию вслух. Напряги где сомневается.',time:'2 мин'}],pillars:[{id:'p6_1',tag:'Тело',title:'День пика. Запомни состояние.',note:'Это твоя «база».'},{id:'p6_2',tag:'Красота',title:'Зеркало без суда — 1 мин',note:'Найди три вещи.'},{id:'p6_3',tag:'Самопредпр.',title:'Итог недели — что я накопил?',note:'Одно предложение.'},{id:'p6_4',tag:'Агентность',title:'Что было моим выбором на неделе?',note:'Конкретное.'}],evening:[]},
+  0:{morning:[],will:[{id:'w0_1',tag:'Воля · Тело',title:'★ Стой как скала',note:'Уверенная поза. 2 минуты без движения. Ты держишь гравитацию.',time:'2 мин'}],pillars:[{id:'p0_1',tag:'Восстановление',title:'Растяжка 15 мин',note:'Поясница, бёдра, плечи. Без боли.'},{id:'p0_2',tag:'Красота',title:'Зеркало без суда',note:''},{id:'p0_3',tag:'Самопредпр.',title:'Неделя впереди — одно намерение',note:'Одно слово.'}]}
+};
+
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||'{}');}catch{return{};}}
+function save(d){localStorage.setItem(KEY,JSON.stringify(d));}
+function todayKey(){return new Date().toISOString().slice(0,10);}
+let D=load();
+
+function goPage(p){
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  const order={day:0,cycle:1,influence:2,scores:3,records:4,affirmations:5};
+  document.querySelectorAll('.nav-tab')[order[p]].classList.add('active');
+  if(p==='cycle')renderCycle();
+  if(p==='influence')renderInfluenceFull();
+  if(p==='scores')renderScores();
+  if(p==='records')renderRecords();
+  if(p==='affirmations')renderAffirmations();
+  window.scrollTo(0,0);
+}
+
+function getState(k){
+  if(!D[k])D[k]={done:[],sleep:null,sleepReason:'',reflection:'',reps:{},back:null,flow:0,ratings:{}};
+  return D[k];
+}
+
+function renderDay(){
+  const d=new Date(),dow=d.getDay(),key=todayKey();
+  const st=getState(key);
+  document.getElementById('dayTitle').textContent=DAYS[dow];
+  document.getElementById('dayDate').textContent=`${d.getDate()} ${MONTHS[d.getMonth()]}`;
+  document.getElementById('dailyQ').textContent=DAILY_Q[dow];
+
+  // 3 affirmations: morning/day/evening (rotate by date)
+  const base=(d.getDate()*3)%AFFIRMATIONS.length;
+  const slots=[['Утро',base],['День',(base+1)%AFFIRMATIONS.length],['Вечер',(base+2)%AFFIRMATIONS.length]];
+  const ratings=D._affRatings||{};
+  document.getElementById('dayAffirmations').innerHTML=slots.map(([label,idx])=>{
+    const a=AFFIRMATIONS[idx],r=ratings[idx]||0;
+    return `<div class="aff-slot">
+      <div class="aff-slot-time">${label}</div>
+      <div class="aff-orig">${a.o}</div>
+      <div class="aff-trans">${a.t}</div>
+      <div class="aff-src">${a.s}</div>
+      <div class="aff-rate-row"><span class="aff-rate-label">Оценить:</span>
+      ${[1,2,3,4,5].map(i=>`<span class="rate-star ${r>=i?'lit':''}" onclick="rateAff(${idx},${i})">★</span>`).join('')}</div>
+    </div>`;
+  }).join('');
+
+  const sc=SCHEDULE[dow];
+  renderChecks('morningChecks',sc.morning,st.done);
+  renderChecks('willChecks',sc.will,st.done,true);
+  renderPillarPool('body',dow,st.done);
+  renderPillarPool('beauty',dow,st.done);
+  renderPillarPool('skill',dow,st.done);
+  renderInfluence(dow,st.done);
+  renderPillarPool('will',dow,st.done);
+  renderChecks('eveningChecks',sc.evening,st.done);
+  document.getElementById('morningSec').style.display=sc.morning.length?'':'none';
+  document.getElementById('eveningSec').style.display=sc.evening.length?'':'none';
+
+  // sleep
+  document.getElementById('sleepYes').classList.toggle('active',st.sleep===true);
+  document.getElementById('sleepNo').classList.toggle('active',st.sleep===false);
+  document.getElementById('sleepReasonWrap').style.display=st.sleep===false?'block':'none';
+  document.getElementById('sleepReason').value=st.sleepReason||'';
+
+  // back
+  document.getElementById('backYes').classList.toggle('active',st.back===true);
+  document.getElementById('backNo').classList.toggle('active',st.back===false);
+
+  // flow
+  renderFlow(st.flow||0);
+
+  // reps
+  ['pushup','pullup','abs','plank'].forEach(r=>{document.getElementById('rep_'+r).value=(st.reps||{})[r]||'';});
+
+  // ratings
+  ['overall','body','beauty','skill','will'].forEach(r=>renderRating(r,(st.ratings||{})[r]||0));
+
+  document.getElementById('reflectionText').value=st.reflection||'';
+  renderHeatmap();
+}
+
+function renderChecks(id,items,done,star){
+  const el=document.getElementById(id);
+  if(!items||!items.length){el.innerHTML='';return;}
+  el.innerHTML=items.map(it=>`<div class="check-item ${done.includes(it.id)?'done':''}" onclick="toggleCheck('${it.id}')">
+    <div class="check-circle"><span class="check-x">✓</span></div>
+    <div class="check-body"><div class="check-tag">${it.tag}</div><div class="check-title">${it.title}</div>${it.note?`<div class="check-note">${it.note}</div>`:''}</div>
+    ${star?'<div class="star-badge">★</div>':''}${it.time?`<div class="check-time">${it.time}</div>`:''}</div>`).join('');
+}
+
+// Render 3 personalized exercises for a pillar; set rotates by day-of-week, repeats across week
+function renderPillarPool(pillar,dow,done){
+  const pool=PILLAR_POOLS[pillar];
+  const set=pool[dow%pool.length];
+  const el=document.getElementById('pillar_'+pillar);
+  const voiceAff=VOICE_AFFIRMATIONS[dow%VOICE_AFFIRMATIONS.length];
+  el.innerHTML=set.map((ex,i)=>{
+    const id=`${pillar}_${dow%pool.length}_${i}`;
+    const voiceBlock=ex.voice?`<div class="voice-aff">«${voiceAff}»</div>`:'';
+    return `<div class="check-item ${done.includes(id)?'done':''}" onclick="toggleCheck('${id}')">
+      <div class="check-circle"><span class="check-x">✓</span></div>
+      <div class="check-body"><div class="check-title">${ex.t}</div><div class="check-note">${ex.n}</div>${voiceBlock}</div></div>`;
+  }).join('');
+}
+
+function toggleCheck(id){
+  const st=getState(todayKey());
+  const i=st.done.indexOf(id);
+  if(i>=0)st.done.splice(i,1);else st.done.push(id);
+  save(D);
+  const el=document.querySelector(`[onclick="toggleCheck('${id}')"]`);
+  if(el)el.classList.toggle('done',st.done.includes(id));
+}
+
+// In-day teaser linking to full Влияние page
+function renderInfluence(dow,done){
+  const p=INFLUENCE_PROGRAM[dow%INFLUENCE_PROGRAM.length];
+  const id='infl_'+(dow%INFLUENCE_PROGRAM.length);
+  const preview=p.theory[0].slice(0,160)+'…';
+  document.getElementById('influenceTeaser').innerHTML=`<div class="infl-teaser" onclick="goPage('influence')">
+    <div class="infl-teaser-topic">${p.topic}</div>
+    <div class="infl-teaser-author">${p.author}</div>
+    <div class="infl-teaser-preview">${preview}</div>
+    <div class="infl-teaser-cta">Открыть полный урок →</div>
+  </div>
+  <div class="infl-done ${done.includes(id)?'done':''}" onclick="event.stopPropagation();toggleCheck('${id}')" style="margin-top:8px">
+    <div class="check-circle"><span class="check-x">✓</span></div>
+    <div class="check-title">Тема изучена и применена</div>
+  </div>`;
+}
+
+let influenceViewDay=null;
+const DAY_FULL=['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+function renderInfluenceFull(){
+  const today=new Date().getDay();
+  if(influenceViewDay===null)influenceViewDay=today;
+  // week nav
+  const nav=document.getElementById('influenceWeekNav');
+  const order=[1,2,3,4,5,6,0]; // Пн..Вс
+  nav.innerHTML=order.map(d=>`<button class="iw-btn ${influenceViewDay===d?'active':''}" onclick="setInfluenceDay(${d})">${['Вс','Пн','Вт','Ср','Чт','Пт','Сб'][d]}</button>`).join('');
+  const p=INFLUENCE_PROGRAM[influenceViewDay%INFLUENCE_PROGRAM.length];
+  const st=getState(todayKey());
+  const id='infl_'+(influenceViewDay%INFLUENCE_PROGRAM.length);
+  const isToday=influenceViewDay===today;
+  document.getElementById('influenceFull').innerHTML=`<div class="infl-card">
+    <div style="font-size:9px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold2);margin-bottom:6px">${DAY_FULL[influenceViewDay]}${isToday?' · сегодня':''}</div>
+    <div class="infl-topic">${p.topic}</div>
+    <div class="infl-author">${p.author}</div>
+    <div class="infl-sub">Теория</div>
+    ${p.theory.map(t=>`<div class="infl-theory-p">${t}</div>`).join('')}
+    <div class="infl-sub">Пример · от Наставника</div>
+    <div class="infl-theory-p">${p.example}</div>
+    <div class="infl-sub">На подумать</div>
+    <div class="infl-text q">${p.questions}</div>
+    <div class="infl-sub">Источники для углубления</div>
+    ${p.sources.map(s=>`<div class="infl-src-item">${s}</div>`).join('')}
+    ${isToday?`<div class="infl-done ${st.done.includes(id)?'done':''}" onclick="toggleCheck('${id}');renderInfluenceFull()">
+      <div class="check-circle"><span class="check-x">✓</span></div>
+      <div class="check-title">Тема изучена и применена</div>
+    </div>`:''}
+  </div>`;
+}
+function setInfluenceDay(d){influenceViewDay=d;renderInfluenceFull();}
+
+function setSleep(v){const st=getState(todayKey());st.sleep=v;save(D);document.getElementById('sleepYes').classList.toggle('active',v===true);document.getElementById('sleepNo').classList.toggle('active',v===false);document.getElementById('sleepReasonWrap').style.display=v===false?'block':'none';}
+function setBack(v){const st=getState(todayKey());st.back=v;save(D);document.getElementById('backYes').classList.toggle('active',v===true);document.getElementById('backNo').classList.toggle('active',v===false);}
+
+function renderFlow(val){
+  const el=document.getElementById('flowScale');
+  el.innerHTML=[1,2,3,4,5].map(i=>`<div class="flow-dot ${val>=i?'active':''}" onclick="setFlow(${i})">${i}</div>`).join('');
+}
+function setFlow(v){const st=getState(todayKey());st.flow=v;save(D);renderFlow(v);}
+
+function renderRating(key,val){
+  const el=document.getElementById('rate_'+key);
+  el.innerHTML=[1,2,3,4,5].map(i=>`<div class="r-dot ${val>=i?'active':''}" onclick="setRating('${key}',${i})">${i}</div>`).join('');
+}
+function setRating(key,v){const st=getState(todayKey());if(!st.ratings)st.ratings={};st.ratings[key]=v;save(D);renderRating(key,v);}
+
+function saveDay(){
+  const st=getState(todayKey());
+  st.sleepReason=document.getElementById('sleepReason').value;
+  st.reflection=document.getElementById('reflectionText').value;
+  st.reps={};
+  ['pushup','pullup','abs','plank'].forEach(r=>{const v=parseInt(document.getElementById('rep_'+r).value);if(!isNaN(v)&&v>0)st.reps[r]=v;});
+  save(D);updateBests();
+}
+function saveDayFinal(){saveDay();getState(todayKey()).saved=true;save(D);showToast('День сохранён ✓');renderHeatmap();}
+
+function rateAff(idx,stars){if(!D._affRatings)D._affRatings={};D._affRatings[idx]=stars;save(D);renderDay();showToast(`Оценка: ${stars} ★`);}
+
+function renderHeatmap(){
+  const row=document.getElementById('weekHeat'),todayStr=todayKey();
+  row.innerHTML='';
+  for(let i=6;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const k=d.toISOString().slice(0,10);
+    const day=D[k],cnt=day?day.done.length:0;
+    let fc=cnt>=10?'f3':cnt>=5?'f2':cnt>=1?'f1':'';
+    const tc=k===todayStr?'today':'';
+    row.innerHTML+=`<div class="heat-cell ${fc} ${tc}"><div class="heat-day">${DAY_SHORT[d.getDay()]}</div><div class="heat-dot"></div><div class="heat-num">${cnt||''}</div></div>`;
+  }
+}
+
+function rangeStats(startBack,endBack){
+  // counts days from endBack..startBack days ago
+  let days=0,sleep=0,flowSum=0,flowN=0,scoreSum=0,scoreN=0,checks=0;
+  for(let i=startBack;i>=endBack;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const k=d.toISOString().slice(0,10);const day=D[k];if(!day)continue;
+    if(day.saved)days++;
+    if(day.sleep===true)sleep++;
+    checks+=(day.done||[]).length;
+    if(day.flow){flowSum+=day.flow;flowN++;}
+    if(day.ratings&&day.ratings.overall){scoreSum+=day.ratings.overall;scoreN++;}
+  }
+  return{days,sleep,checks,flow:flowN?(flowSum/flowN).toFixed(1):'—',score:scoreN?(scoreSum/scoreN).toFixed(1):'—'};
+}
+
+function renderCycle(){
+  const cur=rangeStats(6,0),prev=rangeStats(13,7),month=rangeStats(29,0);
+  document.getElementById('w1Days').textContent=cur.days;
+  document.getElementById('w1Sleep').textContent=cur.sleep;
+  document.getElementById('w1Flow').textContent=cur.flow;
+  document.getElementById('w1Score').textContent=cur.score;
+  document.getElementById('mDays').textContent=month.days;
+  document.getElementById('mSleep').textContent=month.sleep;
+  document.getElementById('mFlow').textContent=month.flow;
+  document.getElementById('mScore').textContent=month.score;
+
+  const arrow=(a,b)=>{const x=parseFloat(a),y=parseFloat(b);if(isNaN(x)||isNaN(y))return`<span class="compare-val same">—</span>`;return x>y?`<span class="compare-val up">↑ +${(x-y).toFixed(1)}</span>`:x<y?`<span class="compare-val down">↓ ${(x-y).toFixed(1)}</span>`:`<span class="compare-val same">= ${x}</span>`;};
+  document.getElementById('cycleCompare').innerHTML=`
+    <div class="compare-row"><div class="compare-label">Дней выполнено</div>${arrow(cur.days,prev.days)}</div>
+    <div class="compare-row"><div class="compare-label">Сон до 23:00</div>${arrow(cur.sleep,prev.sleep)}</div>
+    <div class="compare-row"><div class="compare-label">Поток средн.</div>${arrow(cur.flow,prev.flow)}</div>
+    <div class="compare-row"><div class="compare-label">Оценка дня средн.</div>${arrow(cur.score,prev.score)}</div>`;
+
+  // 30-day chart
+  const chart=document.getElementById('cycleChart');chart.innerHTML='';
+  for(let i=29;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const k=d.toISOString().slice(0,10);const day=D[k];
+    const v=(day&&day.ratings&&day.ratings.overall)?day.ratings.overall:0;
+    chart.innerHTML+=`<div class="bar-col"><div class="bar-fill" style="height:${v/5*100}%"></div>${i%5===0?`<div class="bar-lbl">${d.getDate()}</div>`:'<div class="bar-lbl"></div>'}</div>`;
+  }
+
+  // weeks of month
+  const mw=document.getElementById('monthWeeks');mw.innerHTML='';
+  for(let w=0;w<4;w++){
+    const st=rangeStats((w+1)*7-1,w*7);
+    const label=w===0?'Эта неделя':`${w+1}-я назад`;
+    mw.innerHTML+=`<div class="compare-row"><div class="compare-label">${label}</div><div class="compare-val same" style="color:var(--gold)">${st.score}</div></div>`;
+  }
+}
+
+function renderScores(){
+  // pillar averages over 14 days
+  const pillars=[['body','⚡ Тело',getComputedStyle(document.documentElement).getPropertyValue('--p1')],['beauty','👁 Красота','var(--p2)'],['skill','🧠 Навыки','var(--p3)'],['will','🎯 Воля','var(--p4)']];
+  const colors={body:'#c9a84c',beauty:'#a87b8f',skill:'#7b9ea8',will:'#7ba87e'};
+  let html='';
+  pillars.forEach(([key,name])=>{
+    let sum=0,n=0;
+    for(let i=29;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=d.toISOString().slice(0,10);const day=D[k];if(day&&day.ratings&&day.ratings[key]){sum+=day.ratings[key];n++;}}
+    const avg=n?(sum/n):0;
+    html+=`<div class="pillar-score-row"><div class="pillar-dot" style="background:${colors[key]}"></div><div class="pillar-name-lbl">${name}</div><div class="pillar-track"><div class="pillar-track-fill" style="width:${avg/5*100}%;background:${colors[key]}"></div></div><div class="pillar-avg">${n?avg.toFixed(1):'—'}</div></div>`;
+  });
+  document.getElementById('pillarScores').innerHTML=html;
+
+  // flow chart 14 days
+  const fc=document.getElementById('flowChart');fc.innerHTML='';
+  for(let i=29;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=d.toISOString().slice(0,10);const day=D[k];const v=(day&&day.flow)?day.flow:0;fc.innerHTML+=`<div class="bar-col"><div class="bar-fill" style="height:${v/5*100}%;background:linear-gradient(180deg,#7a9cc2,#5a7a9c)"></div><div class="bar-lbl">${d.getDate()}</div></div>`;}
+
+  // top affirmations
+  const ratings=D._affRatings||{};
+  const top=Object.entries(ratings).filter(([i,r])=>r>=4).sort((a,b)=>b[1]-a[1]);
+  const ta=document.getElementById('topAffirmations');
+  if(!top.length){ta.innerHTML='<div style="font-size:12px;color:var(--dim);font-style:italic">Пока нет оценённых на 4–5★. Оцени аффирмации во вкладке «Аффирмации».</div>';}
+  else{ta.innerHTML=top.map(([i,r])=>{const a=AFFIRMATIONS[i];return `<div class="pillar-score-row"><div class="pillar-name-lbl" style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;color:var(--gold)">${a.o}</div><div class="pillar-avg">${r}★</div></div>`;}).join('');}
+}
+
+let affFilter='all';
+function renderAffirmations(){
+  const langs=['all',...new Set(AFFIRMATIONS.map(a=>a.lang))];
+  document.getElementById('affFilter').innerHTML=langs.map(l=>`<button class="filter-btn ${affFilter===l?'active':''}" onclick="setAffFilter('${l}')">${l==='all'?'Все':LANG_NAMES[l]}</button>`).join('');
+  const ratings=D._affRatings||{};
+  const list=AFFIRMATIONS.map((a,i)=>({a,i})).filter(({a})=>affFilter==='all'||a.lang===affFilter);
+  document.getElementById('affirmationsPage').innerHTML=list.map(({a,i})=>{
+    const r=ratings[i]||0;
+    return `<div class="aff-card"><div class="aff-card-orig">${a.o}</div><div class="aff-card-trans">${a.t}</div><div class="aff-card-src">${a.s}</div><span class="aff-lang-tag">${LANG_NAMES[a.lang]}</span>
+    <div class="aff-card-rate"><span style="font-size:9px;color:var(--dim);margin-right:4px">Оценка:</span>${[1,2,3,4,5].map(j=>`<span class="rate-star ${r>=j?'lit':''}" onclick="rateAffPage(${i},${j})">★</span>`).join('')}${r>=4?'<span style="font-size:9px;color:var(--gold);margin-left:8px">✓ В ритуал</span>':''}</div>
+    ${r>0?`<div class="aff-card-note">${r>=4?'Отлично резонирует':r>=3?'Работает':'Пробуй дальше'} · ${r}/5</div>`:''}</div>`;
+  }).join('');
+}
+function setAffFilter(l){affFilter=l;renderAffirmations();}
+function rateAffPage(idx,stars){if(!D._affRatings)D._affRatings={};D._affRatings[idx]=stars;save(D);renderAffirmations();showToast(`${stars} ★ сохранено`);}
+
+function updateBests(){
+  const b=D._bests||{push:45,pull:8,abs:40,plank:15};
+  const reps=(D[todayKey()]||{}).reps||{};
+  if((reps.pushup||0)>b.push)b.push=reps.pushup;
+  if((reps.pullup||0)>b.pull)b.pull=reps.pullup;
+  if((reps.abs||0)>b.abs)b.abs=reps.abs;
+  if((reps.plank||0)>b.plank)b.plank=reps.plank;
+  D._bests=b;save(D);
+}
+function renderRecords(){
+  const b=D._bests||{push:45,pull:8,abs:40,plank:15};
+  const tg={push:150,pull:30,abs:100,plank:60};
+  ['push','pull','abs','plank'].forEach(k=>{document.getElementById('rec_'+k).textContent=b[k];document.getElementById('bar_'+k).style.width=Math.min(100,Math.round(b[k]/tg[k]*100))+'%';});
+}
+
+function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
+
+renderDay();updateBests();renderRecords();
+</script>
+
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
